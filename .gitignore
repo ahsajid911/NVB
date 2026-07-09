@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Environment files (NEVER commit secrets)
+.env
+.env.*
+!.env.example
+
+# Vercel deployment state
+.vercel/
+
+# Logs
+*.log
+server.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Coverage
+coverage/
+
+# Editor
+.vscode/
+.idea/
+
+# ZCode
+.zcode/
+
+# Large binary docs (keep in repo root but don't track)
+*.pdf

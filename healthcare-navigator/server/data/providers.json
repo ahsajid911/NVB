@@ -1,0 +1,92 @@
+[
+  {
+    "id": "nvidia-1",
+    "provider": "nvidia",
+    "enabled": true,
+    "priority": 1,
+    "model": "meta/llama-3.1-8b-instruct",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "gemini-1",
+    "provider": "gemini",
+    "enabled": true,
+    "priority": 2,
+    "model": "gemini-2.0-flash",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "openai-1",
+    "provider": "openai",
+    "enabled": false,
+    "priority": 3,
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "groq-1",
+    "provider": "groq",
+    "enabled": false,
+    "priority": 4,
+    "model": "llama-3.1-70b-versatile",
+    "temperature": 0.3,
+    "timeout": 15000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "anthropic-1",
+    "provider": "anthropic",
+    "enabled": false,
+    "priority": 5,
+    "model": "claude-3-5-haiku-20241022",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "deepseek-1",
+    "provider": "deepseek",
+    "enabled": false,
+    "priority": 6,
+    "model": "deepseek-chat",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "together-1",
+    "provider": "together",
+    "enabled": false,
+    "priority": 7,
+    "model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "ollama-1",
+    "provider": "ollama",
+    "enabled": false,
+    "priority": 8,
+    "model": "llama3.1",
+    "temperature": 0.3,
+    "timeout": 60000,
+    "maxTokens": 2048
+  },
+  {
+    "id": "nim-1",
+    "provider": "nim",
+    "enabled": false,
+    "priority": 9,
+    "model": "meta/llama-3.1-70b-instruct",
+    "temperature": 0.3,
+    "timeout": 30000,
+    "maxTokens": 2048
+  }
+]

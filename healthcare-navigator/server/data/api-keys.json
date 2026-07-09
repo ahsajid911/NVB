@@ -1,0 +1,11 @@
+[
+  {
+    "id": "935e6edb-c10d-4323-8c3a-c4f100c23901",
+    "providerId": "nvidia-1",
+    "encryptedKey": "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",
+    "active": true,
+    "priority": 1,
+    "lastUsed": null,
+    "rateLimitedUntil": null
+  }
+]
