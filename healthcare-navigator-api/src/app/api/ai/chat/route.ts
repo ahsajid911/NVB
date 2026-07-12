@@ -6,7 +6,7 @@ import { chatSchema } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   // Rate-limit AI calls to mitigate cost abuse.
-  const limited = enforceRateLimit(request, "ai-chat", { limit: 20, windowMs: 60_000 });
+  const limited = await enforceRateLimit(request, "ai-chat", { limit: 20, windowMs: 60_000 });
   if (limited) return limited;
 
   try {

@@ -6,7 +6,7 @@ import { loginSchema, sanitizeFilterValue } from "@/lib/validation";
 export async function POST(request: NextRequest) {
   try {
     // Rate limit login attempts to mitigate brute-force attacks.
-    const limited = enforceRateLimit(request, "login", { limit: 10, windowMs: 60_000 });
+    const limited = await enforceRateLimit(request, "login", { limit: 10, windowMs: 60_000 });
     if (limited) return limited;
 
     const parsed = loginSchema.safeParse(await request.json());
