@@ -90,14 +90,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <aside className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-[#0f172a] transform transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex flex-col h-full">
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]">
-              <Stethoscope className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]">
+                <Stethoscope className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-[15px] font-semibold text-white">{t.common.appName}</p>
+                <p className="text-[11px] text-white/50">{t.admin.adminPanel}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[15px] font-semibold text-white">{t.common.appName}</p>
-              <p className="text-[11px] text-white/50">{t.admin.adminPanel}</p>
-            </div>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12px] text-white/50 hover:text-white transition-colors"
+              aria-label="View public site (opens in new tab)"
+            >
+              View Site ↗
+            </a>
           </div>
 
           <nav className="flex-1 overflow-y-auto py-4 px-3">
@@ -149,7 +160,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex-1" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] font-medium text-[#64748b] hover:text-[#0f172a] transition-colors"
+              aria-label="View public site (opens in new tab)"
+            >
+              View Site ↗
+            </a>
+            <div className="h-5 w-px bg-[#e5e7eb]" />
             <LanguageSwitcher variant="admin" />
             <span className="text-[12px] font-medium text-[#64748b] bg-[#f1f5f9] px-3 py-1 rounded-full capitalize">
               {adminUser?.role?.replace("_", " ")}

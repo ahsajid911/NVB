@@ -26,7 +26,14 @@ export async function POST(request: NextRequest) {
   const results: string[] = [];
 
   try {
-    const passwordHash = await bcrypt.hash("HealthNav2025!", 10);
+    const seedPassword = process.env.SEED_ADMIN_PASSWORD;
+    if (!seedPassword || seedPassword.length < 12) {
+      return NextResponse.json(
+        { error: "SEED_ADMIN_PASSWORD environment variable must be set with at least 12 characters" },
+        { status: 500 }
+      );
+    }
+    const passwordHash = await bcrypt.hash(seedPassword, 12);
     const { error: adminErr } = await sb.from("admins").upsert({
       id: "00000000-0000-0000-0000-000000000001",
       username: "admin",

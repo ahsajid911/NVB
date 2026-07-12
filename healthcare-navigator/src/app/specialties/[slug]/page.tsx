@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Star, BadgeCheck, Clock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { localizeSpecialty, localizeDoctorWithRelations } from "@/lib/localize";
+import { doctors, specialties, hospitals, districts, doctorSpecialties, doctorHospitals } from "@/data/seed";
 
 export default function SpecialtyDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -13,17 +14,16 @@ export default function SpecialtyDetailPage({ params }: { params: Promise<{ slug
   let specialty: any = null;
   let doctorsList: any[] = [];
   try {
-    const data = require("@/data/seed");
-    specialty = data.specialties.find((s: any) => s.slug === slug);
+    specialty = specialties.find((s: any) => s.slug === slug);
     if (specialty) {
-      doctorsList = data.doctorSpecialties.filter((ds: any) => ds.specialty_id === specialty.id).map((ds: any) => {
-        const d = data.doctors.find((doc: any) => doc.id === ds.doctor_id);
+      doctorsList = doctorSpecialties.filter((ds: any) => ds.specialty_id === specialty.id).map((ds: any) => {
+        const d = doctors.find((doc: any) => doc.id === ds.doctor_id);
         if (!d) return null;
-        const specs = data.doctorSpecialties.filter((s2: any) => s2.doctor_id === d.id).map((s2: any) => data.specialties.find((sp: any) => sp.id === s2.specialty_id)).filter(Boolean);
-        const hosps = data.doctorHospitals.filter((dh: any) => dh.doctor_id === d.id).map((dh: any) => {
-          const h = data.hospitals.find((hp: any) => hp.id === dh.hospital_id);
+        const specs = doctorSpecialties.filter((s2: any) => s2.doctor_id === d.id).map((s2: any) => specialties.find((sp: any) => sp.id === s2.specialty_id)).filter(Boolean);
+        const hosps = doctorHospitals.filter((dh: any) => dh.doctor_id === d.id).map((dh: any) => {
+          const h = hospitals.find((hp: any) => hp.id === dh.hospital_id);
           if (!h) return null;
-          const dist = data.districts.find((di: any) => di.id === h.district_id);
+          const dist = districts.find((di: any) => di.id === h.district_id);
           return { ...h, district: dist || { id: "", name: "Unknown", name_bn: "অজানা", division: "Unknown", division_bn: "অজানা" } };
         }).filter(Boolean);
         return { ...d, specialties: specs, hospitals: hosps };
@@ -60,8 +60,7 @@ export default function SpecialtyDetailPage({ params }: { params: Promise<{ slug
                   <p className="mt-1 text-[13px] text-[#64748b]">{doctor.qualifications}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-[13px] text-[#64748b]">
                     <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{doctor.hospitals[0]?.district?.name || "N/A"}</span>
-                    <span className="flex items-center gap-1"><BadgeCheck className="h-3 w-3 text-[#10b981]" />{doctor.experience_years} {t.doctors.profile.years}</span>
-                    <span className="flex items-center gap-1"><Star className="h-3 w-3 text-[#f59e0b] fill-[#f59e0b]" />4.{Math.floor(Math.random() * 9)}</span>
+                    <span className="flex items-center gap-1 text-primary font-medium"><BadgeCheck className="h-3 w-3" />{doctor.experience_years}+ {t.doctors.profile.years}</span>
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{doctor.available_days.length} {t.common.daysPerWeek}</span>
                   </div>
                 </div>

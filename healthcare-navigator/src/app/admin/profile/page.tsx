@@ -5,6 +5,11 @@ import {
   User, Mail, Phone, Shield, Calendar, Clock, Save,
   Eye, EyeOff, CheckCircle, AlertCircle, Loader2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfileData {
   id: string;
@@ -21,37 +26,47 @@ interface ProfileData {
   };
 }
 
-function Skeleton() {
+function ProfileSkeleton() {
   return (
-    <div className="mx-auto max-w-[960px] px-6 py-12 lg:px-10 space-y-8 animate-pulse">
-      <div className="h-10 w-64 rounded-xl bg-[#e5e7eb]" />
-      <div className="h-5 w-80 rounded-lg bg-[#e5e7eb]" />
+    <div className="mx-auto max-w-[960px] px-6 py-12 lg:px-10 space-y-8">
+      <div>
+        <Skeleton className="h-10 w-64 mb-3" />
+        <Skeleton className="h-5 w-80" />
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 rounded-2xl bg-white border border-[#e5e7eb] p-8">
-          <div className="flex items-center gap-6 mb-8">
-            <div className="h-24 w-24 rounded-full bg-[#e5e7eb]" />
-            <div className="space-y-3 flex-1">
-              <div className="h-5 w-48 rounded-lg bg-[#e5e7eb]" />
-              <div className="h-4 w-32 rounded-lg bg-[#e5e7eb]" />
-            </div>
-          </div>
-          <div className="space-y-5">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="space-y-2">
-                <div className="h-4 w-24 rounded bg-[#e5e7eb]" />
-                <div className="h-11 w-full rounded-xl bg-[#e5e7eb]" />
+        <div className="lg:col-span-2">
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center gap-6 mb-8">
+                <Skeleton className="h-24 w-24 rounded-full" />
+                <div className="space-y-3 flex-1">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="space-y-5">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-11 w-full" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <div className="rounded-2xl bg-white border border-[#e5e7eb] p-8 space-y-5">
-          <div className="h-5 w-40 rounded-lg bg-[#e5e7eb]" />
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="space-y-2">
-              <div className="h-3 w-20 rounded bg-[#e5e7eb]" />
-              <div className="h-4 w-36 rounded bg-[#e5e7eb]" />
-            </div>
-          ))}
+        <div>
+          <Card>
+            <CardContent className="p-8 space-y-5">
+              <Skeleton className="h-5 w-40" />
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -85,12 +100,17 @@ export default function AdminProfilePage() {
     fetch("/api/admin/profile")
       .then((r) => r.json())
       .then((data) => {
-        if (data.profile || data.id) {
-          setProfile(data);
-          setFullName(data.profile?.full_name || "");
-          setBio(data.profile?.bio || "");
-          setPhone(data.profile?.phone || "");
-          setAvatarUrl(data.profile?.avatar_url || "");
+        const userData = data.user || data;
+        const profileData = data.profile || {};
+        if (userData.id || userData.username) {
+          setProfile({
+            ...userData,
+            profile: profileData,
+          });
+          setFullName(profileData.full_name || "");
+          setBio(profileData.bio || "");
+          setPhone(profileData.phone || "");
+          setAvatarUrl(profileData.avatar_url || "");
         }
       })
       .catch(() => {})
@@ -131,7 +151,7 @@ export default function AdminProfilePage() {
         showFeedback(setProfileMessage, "success", "Profile updated successfully");
         setEditing(false);
         if (data.profile) {
-          setProfile((prev) => (prev ? { ...prev, profile: data.profile } : prev));
+          setProfile((prev) => prev ? { ...prev, profile: data.profile } : prev);
         }
       } else {
         showFeedback(setProfileMessage, "error", data.error || "Failed to update profile");
@@ -177,319 +197,300 @@ export default function AdminProfilePage() {
     setPasswordSaving(false);
   };
 
-  if (loading) return <Skeleton />;
+  if (loading) return <ProfileSkeleton />;
 
   return (
     <div className="mx-auto max-w-[960px] px-6 py-12 lg:px-10">
-      {/* Header */}
       <div className="mb-8">
-        <h1
-          className="text-[36px] font-semibold text-[#0f172a] sm:text-[44px] tracking-[-0.374px]"
-          style={{ fontFamily: '"SF Pro Display", system-ui, -apple-system, sans-serif' }}
-        >
-          My Profile
-        </h1>
-        <p className="mt-3 text-[18px] text-[#64748b]">
+        <h1 className="text-4xl font-semibold tracking-tight">My Profile</h1>
+        <p className="mt-3 text-lg text-muted-foreground">
           Manage your personal information and security settings
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Profile & Password */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Profile Information Card */}
-          <div className="rounded-2xl bg-white border border-[#e5e7eb] p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center justify-between mb-7">
-              <h2 className="text-[20px] font-semibold text-[#0f172a] flex items-center gap-2">
-                <User className="h-5 w-5 text-[#2563eb]" />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
                 Profile Information
-              </h2>
+              </CardTitle>
               {!editing ? (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="rounded-full bg-[#f1f5f9] px-5 py-2 text-[14px] font-medium text-[#475569] hover:bg-[#e2e8f0] transition-colors"
-                >
+                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                   Edit
-                </button>
+                </Button>
               ) : (
-                <button
-                  onClick={() => {
-                    setEditing(false);
-                    setFullName(profile?.profile?.full_name || "");
-                    setBio(profile?.profile?.bio || "");
-                    setPhone(profile?.profile?.phone || "");
-                    setAvatarUrl(profile?.profile?.avatar_url || "");
-                  }}
-                  className="rounded-full bg-[#f1f5f9] px-5 py-2 text-[14px] font-medium text-[#475569] hover:bg-[#e2e8f0] transition-colors"
-                >
+                <Button variant="outline" size="sm" onClick={() => {
+                  setEditing(false);
+                  setFullName(profile?.profile?.full_name || "");
+                  setBio(profile?.profile?.bio || "");
+                  setPhone(profile?.profile?.phone || "");
+                  setAvatarUrl(profile?.profile?.avatar_url || "");
+                }}>
                   Cancel
-                </button>
+                </Button>
               )}
-            </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {profileMessage && (
+                <div
+                  className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ${
+                    profileMessage.type === "success"
+                      ? "bg-success/10 text-success border border-success/20"
+                      : "bg-destructive/10 text-destructive border border-destructive/20"
+                  }`}
+                  role="alert"
+                >
+                  {profileMessage.type === "success" ? (
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  )}
+                  {profileMessage.text}
+                </div>
+              )}
 
-            {/* Profile Feedback */}
-            {profileMessage && (
-              <div
-                className={`mb-6 flex items-center gap-2 rounded-xl px-5 py-3 text-[14px] font-medium ${
-                  profileMessage.type === "success"
-                    ? "bg-[#dcfce7] text-[#166534] border border-[#86efac]"
-                    : "bg-[#fef2f2] text-[#991b1b] border border-[#fca5a5]"
-                }`}
-              >
-                {profileMessage.type === "success" ? (
-                  <CheckCircle className="h-4 w-4 shrink-0" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                )}
-                {profileMessage.text}
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="h-24 w-24 rounded-full object-cover border-2 border-border" />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-primary-foreground text-2xl font-semibold">
+                      {getInitials()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">
+                    {fullName || profile?.username || "Admin"}
+                  </p>
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {profile?.role?.replace("_", " ")}
+                  </p>
+                  {editing && (
+                    <div className="mt-2">
+                      <Input
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        placeholder="Avatar URL (optional)"
+                        className="max-w-xs text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
 
-            {/* Avatar */}
-            <div className="flex items-center gap-5 mb-7">
-              <div className="relative">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar"
-                    className="h-24 w-24 rounded-full object-cover border-2 border-[#e5e7eb]"
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="fullName" className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    disabled={!editing}
+                    placeholder="Enter your full name"
+                    className="mt-1.5"
                   />
-                ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#2563eb] text-white text-[28px] font-semibold">
-                    {getInitials()}
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-[17px] font-semibold text-[#0f172a]">
-                  {fullName || profile?.username || "Admin"}
-                </p>
-                <p className="text-[14px] text-[#64748b] capitalize">
-                  {profile?.role?.replace("_", " ")}
-                </p>
-                {editing && (
-                  <div className="mt-2">
-                    <input
-                      value={avatarUrl}
-                      onChange={(e) => setAvatarUrl(e.target.value)}
-                      placeholder="Avatar URL (optional)"
-                      className="w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-3 py-2 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none max-w-xs"
+                </div>
+
+                <div>
+                  <label htmlFor="bio" className="text-sm font-medium text-muted-foreground">Bio</label>
+                  <textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    disabled={!editing}
+                    rows={3}
+                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="phone" className="text-sm font-medium text-muted-foreground">Phone</label>
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={!editing}
+                      placeholder="+880-..."
+                      className="mt-1.5"
                     />
                   </div>
+                  <div>
+                    <label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</label>
+                    <Input
+                      id="email"
+                      value={profile?.email || ""}
+                      readOnly
+                      className="mt-1.5 bg-muted cursor-not-allowed"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">Email cannot be changed here</p>
+                  </div>
+                </div>
+
+                {editing && (
+                  <Button onClick={handleProfileSave} disabled={profileSaving}>
+                    {profileSaving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
                 )}
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Form Fields */}
-            <div className="space-y-5">
-              <div>
-                <label className="text-[13px] font-semibold text-[#475569]">Full Name</label>
-                <input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  disabled={!editing}
-                  className="mt-1.5 w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              <div>
-                <label className="text-[13px] font-semibold text-[#475569]">Bio</label>
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  disabled={!editing}
-                  rows={3}
-                  className="mt-1.5 w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed transition-colors resize-none"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="text-[13px] font-semibold text-[#475569]">Phone</label>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={!editing}
-                    className="mt-1.5 w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                    placeholder="+880-..."
-                  />
-                </div>
-                <div>
-                  <label className="text-[13px] font-semibold text-[#475569]">Email</label>
-                  <input
-                    value={profile?.email || ""}
-                    readOnly
-                    className="mt-1.5 w-full rounded-xl border border-[#e5e7eb] bg-[#f1f5f9] px-4 py-3 text-[15px] text-[#64748b] cursor-not-allowed"
-                  />
-                  <p className="mt-1 text-[12px] text-[#94a3b8]">Email cannot be changed here</p>
-                </div>
-              </div>
-
-              {editing && (
-                <button
-                  onClick={handleProfileSave}
-                  disabled={profileSaving}
-                  className="flex items-center gap-2 rounded-full bg-[#2563eb] px-6 py-3 text-[15px] font-medium text-white hover:bg-[#1d4ed8] transition-colors disabled:opacity-50"
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Change Password
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {passwordMessage && (
+                <div
+                  className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ${
+                    passwordMessage.type === "success"
+                      ? "bg-success/10 text-success border border-success/20"
+                      : "bg-destructive/10 text-destructive border border-destructive/20"
+                  }`}
+                  role="alert"
                 >
-                  {profileSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
+                  {passwordMessage.type === "success" ? (
+                    <CheckCircle className="h-4 w-4 shrink-0" />
                   ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Save Changes
-                    </>
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                   )}
-                </button>
+                  {passwordMessage.text}
+                </div>
               )}
-            </div>
-          </div>
 
-          {/* Change Password Card */}
-          <div className="rounded-2xl bg-white border border-[#e5e7eb] p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <h2 className="text-[20px] font-semibold text-[#0f172a] flex items-center gap-2 mb-7">
-              <Shield className="h-5 w-5 text-[#2563eb]" />
-              Change Password
-            </h2>
-
-            {/* Password Feedback */}
-            {passwordMessage && (
-              <div
-                className={`mb-6 flex items-center gap-2 rounded-xl px-5 py-3 text-[14px] font-medium ${
-                  passwordMessage.type === "success"
-                    ? "bg-[#dcfce7] text-[#166534] border border-[#86efac]"
-                    : "bg-[#fef2f2] text-[#991b1b] border border-[#fca5a5]"
-                }`}
-              >
-                {passwordMessage.type === "success" ? (
-                  <CheckCircle className="h-4 w-4 shrink-0" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                )}
-                {passwordMessage.text}
-              </div>
-            )}
-
-            <div className="space-y-5">
               <div>
-                <label className="text-[13px] font-semibold text-[#475569]">Current Password</label>
+                <label htmlFor="currentPassword" className="text-sm font-medium text-muted-foreground">Current Password</label>
                 <div className="relative mt-1.5">
-                  <input
+                  <Input
+                    id="currentPassword"
                     type={showCurrent ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 pr-11 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none transition-colors"
                     placeholder="Enter current password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrent(!showCurrent)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showCurrent ? "Hide password" : "Show password"}
                   >
-                    {showCurrent ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                    {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-[13px] font-semibold text-[#475569]">New Password</label>
+                <label htmlFor="newPassword" className="text-sm font-medium text-muted-foreground">New Password</label>
                 <div className="relative mt-1.5">
-                  <input
+                  <Input
+                    id="newPassword"
                     type={showNew ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 pr-11 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none transition-colors"
                     placeholder="Enter new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNew(!showNew)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showNew ? "Hide password" : "Show password"}
                   >
-                    {showNew ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                    {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 {newPassword && newPassword.length < 8 && (
-                  <p className="mt-1.5 text-[12px] text-[#d97706]">Password must be at least 8 characters</p>
+                  <p className="mt-1.5 text-xs text-warning">Password must be at least 8 characters</p>
                 )}
               </div>
 
               <div>
-                <label className="text-[13px] font-semibold text-[#475569]">Confirm New Password</label>
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-muted-foreground">Confirm New Password</label>
                 <div className="relative mt-1.5">
-                  <input
+                  <Input
+                    id="confirmPassword"
                     type={showConfirm ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 pr-11 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none transition-colors"
                     placeholder="Confirm new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showConfirm ? "Hide password" : "Show password"}
                   >
-                    {showConfirm ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="mt-1.5 text-[12px] text-[#d97706]">Passwords do not match</p>
+                  <p className="mt-1.5 text-xs text-warning">Passwords do not match</p>
                 )}
               </div>
 
-              <button
-                onClick={handlePasswordChange}
-                disabled={passwordSaving}
-                className="flex items-center gap-2 rounded-full bg-[#2563eb] px-6 py-3 text-[15px] font-medium text-white hover:bg-[#1d4ed8] transition-colors disabled:opacity-50"
-              >
+              <Button onClick={handlePasswordChange} disabled={passwordSaving}>
                 {passwordSaving ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Changing...
                   </>
                 ) : (
                   <>
-                    <Shield className="h-4 w-4" />
+                    <Shield className="h-4 w-4 mr-2" />
                     Change Password
                   </>
                 )}
-              </button>
-            </div>
-          </div>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right Column - Account Info */}
-        <div className="space-y-8">
-          <div className="rounded-2xl bg-white border border-[#e5e7eb] p-7 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <h2 className="text-[20px] font-semibold text-[#0f172a] mb-6">Account Information</h2>
-            <div className="space-y-5">
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
               <div>
-                <p className="text-[12px] font-semibold text-[#94a3b8] uppercase tracking-wide">Username</p>
-                <p className="mt-1 text-[15px] font-medium text-[#0f172a]">{profile?.username || "—"}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Username</p>
+                <p className="mt-1 text-sm font-medium text-foreground">{profile?.username || "—"}</p>
               </div>
               <div>
-                <p className="text-[12px] font-semibold text-[#94a3b8] uppercase tracking-wide">Email</p>
-                <p className="mt-1 text-[15px] font-medium text-[#0f172a] break-all">{profile?.email || "—"}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+                <p className="mt-1 text-sm font-medium text-foreground break-all">{profile?.email || "—"}</p>
               </div>
               <div>
-                <p className="text-[12px] font-semibold text-[#94a3b8] uppercase tracking-wide">Role</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Role</p>
                 <p className="mt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-3 py-1 text-[13px] font-medium text-[#2563eb] capitalize">
-                    <Shield className="h-3 w-3" />
+                  <Badge variant="secondary" className="capitalize">
+                    <Shield className="h-3 w-3 mr-1" />
                     {profile?.role?.replace("_", " ") || "—"}
-                  </span>
+                  </Badge>
                 </p>
               </div>
-              <div className="border-t border-[#f1f5f9] pt-5">
-                <p className="text-[12px] font-semibold text-[#94a3b8] uppercase tracking-wide flex items-center gap-1.5">
+              <div className="border-t pt-5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" />
                   Member Since
                 </p>
-                <p className="mt-1 text-[15px] font-medium text-[#0f172a]">
+                <p className="mt-1 text-sm font-medium text-foreground">
                   {profile?.created_at
                     ? new Date(profile.created_at).toLocaleDateString("en-US", {
                         year: "numeric",
@@ -500,11 +501,11 @@ export default function AdminProfilePage() {
                 </p>
               </div>
               <div>
-                <p className="text-[12px] font-semibold text-[#94a3b8] uppercase tracking-wide flex items-center gap-1.5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   <Clock className="h-3 w-3" />
                   Last Login
                 </p>
-                <p className="mt-1 text-[15px] font-medium text-[#0f172a]">
+                <p className="mt-1 text-sm font-medium text-foreground">
                   {profile?.last_login
                     ? new Date(profile.last_login).toLocaleString("en-US", {
                         year: "numeric",
@@ -516,8 +517,8 @@ export default function AdminProfilePage() {
                     : "—"}
                 </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

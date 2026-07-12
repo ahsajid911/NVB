@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, Phone, Building2, ExternalLink, Navigation } from "l
 import dynamic from "next/dynamic";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { localizeHospitalWithDistrict, localizeDoctorWithRelations } from "@/lib/localize";
+import { doctors, specialties, hospitals, districts, doctorSpecialties, doctorHospitals } from "@/data/seed";
 
 const HospitalMap = dynamic(() => import("@/components/features/HospitalMap"), { ssr: false });
 
@@ -16,15 +17,14 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
   let hospital: any = null;
   let doctorsList: any[] = [];
   try {
-    const data = require("@/data/seed");
-    const h = data.hospitals.find((hp: any) => hp.id === id);
+    const h = hospitals.find((hp: any) => hp.id === id);
     if (h) {
-      const dist = data.districts.find((d: any) => d.id === h.district_id);
+      const dist = districts.find((d: any) => d.id === h.district_id);
       hospital = { ...h, district: dist || { name: "Unknown" } };
-      doctorsList = data.doctorHospitals.filter((dh: any) => dh.hospital_id === id).map((dh: any) => {
-        const d = data.doctors.find((doc: any) => doc.id === dh.doctor_id);
+      doctorsList = doctorHospitals.filter((dh: any) => dh.hospital_id === id).map((dh: any) => {
+        const d = doctors.find((doc: any) => doc.id === dh.doctor_id);
         if (!d) return null;
-        const specs = data.doctorSpecialties.filter((s: any) => s.doctor_id === d.id).map((s: any) => data.specialties.find((sp: any) => sp.id === s.specialty_id)).filter(Boolean);
+        const specs = doctorSpecialties.filter((s: any) => s.doctor_id === d.id).map((s: any) => specialties.find((sp: any) => sp.id === s.specialty_id)).filter(Boolean);
         return { ...d, specialties: specs, hospitals: [] };
       }).filter(Boolean);
     }

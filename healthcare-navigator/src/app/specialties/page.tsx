@@ -32,15 +32,23 @@ export default function SpecialtiesPage() {
         <p className="mt-3 text-[15px] sm:text-[18px] text-[#64748b]">{t.specialties.subtitle.replace("{count}", specialties.length.toString())}</p>
       </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {specialties.map((s) => {
+        {specialties.map((s, index) => {
           const locSpec = localizeSpecialty(s, language);
+          const colors = [
+            "from-blue-500 to-blue-600",
+            "from-emerald-500 to-emerald-600",
+            "from-purple-500 to-purple-600",
+            "from-orange-500 to-orange-600",
+            "from-pink-500 to-pink-600",
+          ];
+          const colorClass = colors[index % colors.length];
           return (
-          <Link key={s.id} href={`/specialties/${s.slug}`} className="group rounded-2xl bg-white border border-[#e5e7eb] p-7 hover:border-[#2563eb]/30 hover:shadow-md transition-all">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#dbeafe] text-[#2563eb] group-hover:bg-[#2563eb] group-hover:text-white transition-colors">
+          <Link key={s.id} href={`/specialties/${s.slug}`} className="group rounded-2xl bg-white border border-border p-7 card-hover stagger-item">
+            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${colorClass} text-white group-hover:scale-110 transition-transform`}>
               {iconMap[s.icon || "stethoscope"] || <Stethoscope className="h-8 w-8" />}
             </div>
-            <h2 className="mt-5 text-[18px] font-semibold text-[#0f172a] group-hover:text-[#2563eb] transition-colors">{locSpec.name}</h2>
-            <p className="mt-2.5 text-[17px] text-[#64748b] leading-relaxed">{locSpec.description}</p>
+            <h2 className="mt-5 text-lg font-semibold text-foreground group-hover:text-primary transition-colors">{locSpec.name}</h2>
+            <p className="mt-2.5 text-base text-muted-foreground leading-relaxed">{locSpec.description}</p>
           </Link>
           );
         })}

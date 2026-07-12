@@ -5,7 +5,7 @@ import {
   Download, Users, Building2, Stethoscope, FileText, FileJson,
   Loader2, CheckCircle2, AlertCircle, Activity,
 } from "lucide-react";
-import { dataStore } from "@/services/dataStore";
+import { doctors, hospitals, specialties } from "@/data/seed";
 
 type ExportType = "doctors" | "hospitals" | "specialties";
 type ExportFormat = "csv" | "json";
@@ -109,7 +109,7 @@ function convertToCSV(data: any[]): string {
 }
 
 export default function AdminExportPage() {
-  const [stats] = useState(dataStore.getStats());
+  const [stats] = useState({ doctors: doctors.length, hospitals: hospitals.length, specialties: specialties.length });
   const [exportingType, setExportingType] = useState<ExportType | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [exportHistory, setExportHistory] = useState<ExportHistoryEntry[]>([]);
@@ -145,9 +145,9 @@ export default function AdminExportPage() {
     setExportingType(type);
     try {
       let exportData: any[];
-      if (type === "doctors") exportData = dataStore.getDoctors();
-      else if (type === "hospitals") exportData = dataStore.getHospitals();
-      else exportData = dataStore.getSpecialties();
+      if (type === "doctors") exportData = doctors;
+      else if (type === "hospitals") exportData = hospitals;
+      else exportData = specialties;
 
       if (exportData.length === 0) {
         showToast("error", `No ${type} data to export`);

@@ -18,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/doctors`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
     { url: `${baseUrl}/specialties`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
     { url: `${baseUrl}/hospitals`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
-    { url: `${baseUrl}/symptom-assistant`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.8 },
+    { url: `${baseUrl}/ai-symptom-checker`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.8 },
   ];
 
   const specialtyPages = specialties.map((s) => ({

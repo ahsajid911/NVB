@@ -18,7 +18,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   // Parse filters from query params
   const filters: Record<string, any> = {};
-  if (searchParams.get("query")) filters.query = searchParams.get("query")!;
+  const searchQuery = searchParams.get("q") || searchParams.get("query");
+  if (searchQuery) filters.query = searchQuery;
   if (searchParams.get("specialty")) filters.specialty = searchParams.get("specialty")!;
   if (searchParams.get("hospital")) filters.hospital = searchParams.get("hospital")!;
   if (searchParams.get("district")) filters.district = searchParams.get("district")!;

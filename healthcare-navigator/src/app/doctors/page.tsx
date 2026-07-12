@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, SlidersHorizontal, MapPin, Clock, Star } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, Clock, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { districts, specialties as specialtiesSeed, doctors as doctorsSeed, doctorSpecialties as dsSeed, doctorHospitals as dhSeed, hospitals as hospitalsSeed, districts as districtsSeed } from "@/data/seed";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -154,13 +154,21 @@ function DoctorSearchContent() {
             </div>
           ) : (
             <div className="space-y-4">
-              {paged.map((doctor) => {
+              {paged.map((doctor, index) => {
                 const locDoc = localizeDoctorWithRelations(doctor as any, language);
+                const specialtyColors = [
+                  "from-blue-500 to-blue-600",
+                  "from-emerald-500 to-emerald-600",
+                  "from-purple-500 to-purple-600",
+                  "from-orange-500 to-orange-600",
+                  "from-pink-500 to-pink-600",
+                ];
+                const colorIndex = index % specialtyColors.length;
                 return (
                 <Link key={doctor.id} href={`/doctors/${doctor.id}`}
-                  className="group block rounded-2xl bg-white border border-[#e5e7eb] p-5 hover:border-[#2563eb]/30 hover:shadow-md transition-all">
+                  className="group block rounded-2xl bg-white border border-border p-5 card-hover stagger-item">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#dbeafe] text-[#2563eb] text-[21px] font-semibold shrink-0">
+                    <div className={`flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${specialtyColors[colorIndex]} text-white text-[21px] font-semibold shrink-0`}>
                       {locDoc.name.split(" ").slice(-1)[0][0]}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -173,7 +181,7 @@ function DoctorSearchContent() {
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[13px] text-[#64748b]">
                         <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{locDoc.hospitals[0]?.district?.name || "N/A"}</span>
                         <span>{t.doctors.profile.yearsExperience.replace("{count}", doctor.experience_years.toString())}</span>
-                        <span className="flex items-center gap-1"><Star className="h-3 w-3 text-[#f59e0b] fill-[#f59e0b]" />4.{Math.floor(Math.random() * 9)}</span>
+                        <span className="flex items-center gap-1 text-primary font-medium"><BadgeCheck className="h-3 w-3" />{doctor.experience_years}+ yrs</span>
                         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{t.doctors.profile.daysPerWeek.replace("{count}", doctor.available_days.length.toString())}</span>
                       </div>
                     </div>

@@ -39,3 +39,6 @@ coverage/
 
 # Large binary docs (keep in repo root but don't track)
 *.pdf
+
+# Server data (may contain secrets)
+healthcare-navigator/server/data/

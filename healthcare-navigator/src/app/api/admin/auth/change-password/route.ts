@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
 
   const hash = await hashPassword(newPassword);
   await supabaseAdmin.from("admins").update({ password_hash: hash, updated_at: new Date().toISOString() }).eq("id", user.id);
+  
+  // Invalidate all existing sessions except the current one
+  await supabaseAdmin.from("admin_sessions").delete().eq("admin_id", user.id).neq("token", token);
+  
   await logActivity(user.id, "password_changed", "auth", user.id);
 
   return NextResponse.json({ success: true });

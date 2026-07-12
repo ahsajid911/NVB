@@ -1,21 +1,13 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { getDb } from "@/lib/db/client";
 
-let _supabaseAdmin: SupabaseClient | null = null;
-function getSupabase() {
-  if (_supabaseAdmin) return _supabaseAdmin;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  _supabaseAdmin = createClient(url, key);
-  return _supabaseAdmin;
-}
-
+/** Shared admin Supabase client (uses the singleton from lib/db/client). */
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    const client = getSupabase();
-    if (!client) throw new Error("Supabase not configured");
+    const client = getDb();
+    if (!client) throw new Error("Database not configured");
     const val = (client as any)[prop];
     return typeof val === "function" ? val.bind(client) : val;
   },
@@ -61,7 +53,7 @@ export function generateToken(): string {
 }
 
 export async function createSession(adminId: string, ipAddress?: string, userAgent?: string): Promise<string> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) throw new Error("Database unavailable — cannot create session");
 
   const token = generateToken();
@@ -86,7 +78,7 @@ export async function createSession(adminId: string, ipAddress?: string, userAge
 export async function validateSession(token: string): Promise<AdminUser | null> {
   if (!token) return null;
 
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) return null;
 
   const { data: session } = await sb
@@ -124,7 +116,7 @@ export async function validateSession(token: string): Promise<AdminUser | null> 
 }
 
 export async function destroySession(token: string): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) return;
   await sb.from("admin_sessions").delete().eq("token", token);
 }
@@ -138,7 +130,7 @@ export async function logActivity(
   ipAddress?: string,
   userAgent?: string
 ): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) return;
   await sb.from("admin_activity_logs").insert({
     admin_id: adminId,

@@ -9,7 +9,8 @@ import LanguageSwitcher from "@/components/features/LanguageSwitcher";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/admin";
+  const redirectParam = searchParams.get("redirect") || "/admin";
+  const redirect = redirectParam.startsWith("/") && !redirectParam.startsWith("//") ? redirectParam : "/admin";
   const { t } = useLanguage();
 
   const [username, setUsername] = useState("");
@@ -47,49 +48,63 @@ function LoginForm() {
 
   return (
     <div className="rounded-2xl bg-white p-8 shadow-xl">
-      <h2 className="text-[18px] font-semibold text-[#0f172a] mb-6">Sign in to your account</h2>
+      <h2 className="text-lg font-semibold text-foreground mb-6">Sign in to your account</h2>
 
       {error && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl bg-[#fef2f2] border border-[#fecaca] px-4 py-3 text-[13px] text-[#991b1b]">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
+        <div className="mb-5 flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive" role="alert">
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
           {error}
         </div>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-5">
+      <form onSubmit={handleLogin} className="space-y-5" aria-label="Admin login form">
         <div>
-          <label className="text-[13px] font-semibold text-[#475569]">Username</label>
+          <label htmlFor="username" className="text-sm font-semibold text-muted-foreground">Username</label>
           <input
+            id="username"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            className="mt-1.5 w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20 focus:outline-none transition-all"
+            aria-required="true"
+            className="mt-1.5 w-full rounded-xl border border-input bg-muted px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
             placeholder="Enter your username"
           />
         </div>
 
         <div>
-          <label className="text-[13px] font-semibold text-[#475569]">Password</label>
+          <label htmlFor="password" className="text-sm font-semibold text-muted-foreground">Password</label>
           <div className="relative mt-1.5">
             <input
+              id="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-xl border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 pr-12 text-[15px] text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20 focus:outline-none transition-all"
+              aria-required="true"
+              className="w-full rounded-xl border border-input bg-muted px-4 py-3 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
               placeholder="Enter your password"
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
         </div>
 
-        <button type="submit" disabled={loading} className="w-full rounded-xl bg-[#2563eb] px-4 py-3 text-[15px] font-medium text-white hover:bg-[#1d4ed8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <button
+          type="submit"
+          disabled={loading}
+          aria-busy={loading}
+          className="w-full rounded-xl bg-primary px-4 py-3 text-base font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" aria-hidden="true" />
               Signing in...
             </span>
           ) : "Sign In"}

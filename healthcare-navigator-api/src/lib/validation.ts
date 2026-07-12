@@ -65,6 +65,38 @@ export const changePasswordSchema = z.object({
 
 export const importTypeSchema = z.enum(["doctors", "hospitals", "specialties"]);
 
+export const userRegisterSchema = z.object({
+  email: z.string().email("Invalid email").max(200),
+  password: z.string().min(8, "Password must be at least 8 characters").max(200),
+  full_name: z.string().max(200).optional(),
+});
+
+export const userLoginSchema = z.object({
+  email: z.string().email("Invalid email").max(200),
+  password: z.string().min(1, "Password is required").max(200),
+});
+
+export const createReviewSchema = z.object({
+  doctor_id: z.string().min(1, "Doctor ID is required"),
+  rating: z.number().int().min(1, "Rating must be 1-5").max(5),
+  comment: z.string().min(5, "Comment must be at least 5 characters").max(2000),
+});
+
+export const searchFiltersSchema = z.object({
+  query: z.string().max(200).optional(),
+  specialty: z.string().max(100).optional(),
+  hospital: z.string().max(200).optional(),
+  district: z.string().max(100).optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
+  minExperience: z.number().int().min(0).optional(),
+  maxFee: z.number().min(0).optional(),
+  availableDay: z.string().max(50).optional(),
+  sortBy: z.enum(["name", "experience", "fee", "rating"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+  page: z.number().int().min(1).optional(),
+  limit: z.number().int().min(1).max(100).optional(),
+});
+
 /** Sanitize a username before interpolating into a PostgREST `.or()` filter,
  *  to prevent filter-injection via `,` `.` `(` `)` and control characters. */
 export function sanitizeFilterValue(value: string): string {

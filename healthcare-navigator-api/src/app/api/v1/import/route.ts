@@ -1,0 +1,189 @@
+import { NextRequest } from "next/server";
+import { supabaseAdmin } from "@/lib/auth";
+import { requireAdminPermission } from "@/lib/requireAdmin";
+import { importTypeSchema } from "@/lib/validation";
+import { importHistoryRepo } from "@/lib/repositories/import-history.repo";
+import { withErrorHandler } from "@/lib/middleware/errorHandler";
+import { success, error } from "@/lib/utils/apiResponse";
+
+/**
+ * POST /api/v1/import
+ * CSV import for doctors / hospitals / specialties.
+ * Requires an authenticated admin with import permission on data.
+ * Persists rows to Supabase and records an entry in admin_import_history.
+ */
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  const auth = await requireAdminPermission(request, "import", "data");
+  if (!auth.ok) return auth.response;
+
+  const formData = await request.formData();
+  const file = formData.get("file") as File;
+  const typeRaw = formData.get("type") as string;
+
+  if (!file || !typeRaw) {
+    return error("File and type required", 400, "MISSING_PARAM");
+  }
+
+  const typeCheck = importTypeSchema.safeParse(typeRaw);
+  if (!typeCheck.success) {
+    return error("Invalid type. Must be: doctors, hospitals, or specialties", 400, "VALIDATION_ERROR");
+  }
+
+  const type = typeCheck.data;
+  const text = await file.text();
+  const lines = text.split("\n").filter((l) => l.trim());
+  if (lines.length < 2) {
+    return error("File has no data rows", 400, "INVALID_FILE");
+  }
+
+  const headers = parseCsvLine(lines[0]).map((h) => h.trim().toLowerCase());
+  const rows = lines.slice(1);
+
+  const expectedHeaders: Record<string, string[]> = {
+    doctors: ["name", "qualifications", "experience_years", "consultation_fee", "gender", "chamber_address", "available_days", "hospitals", "specialties"],
+    hospitals: ["name", "district", "type", "address", "contact_phone", "departments", "latitude", "longitude"],
+    specialties: ["name", "description"],
+  };
+
+  const required = expectedHeaders[type] || [];
+  for (const h of required) {
+    if (!headers.includes(h)) {
+      return error(`Missing required header: ${h}. Expected: ${required.join(", ")}`, 400, "MISSING_HEADER");
+    }
+  }
+
+  let imported = 0;
+  let skipped = 0;
+  const errors: string[] = [];
+  const records: Record<string, any>[] = [];
+
+  rows.forEach((row, i) => {
+    try {
+      const values = parseCsvLine(row).map((v) => v.trim());
+      if (values.length < 2) {
+        skipped++;
+        errors.push(`Row ${i + 2}: insufficient columns`);
+        return;
+      }
+      const record: Record<string, any> = {};
+      headers.forEach((h, idx) => {
+        record[h] = values[idx] ?? "";
+      });
+
+      if (type === "hospitals") {
+        const lat = parseFloat(record.latitude);
+        const lng = parseFloat(record.longitude);
+        if (record.latitude && (isNaN(lat) || lat < -90 || lat > 90)) {
+          errors.push(`Row ${i + 2}: invalid latitude "${record.latitude}"`);
+          skipped++;
+          return;
+        }
+        if (record.longitude && (isNaN(lng) || lng < -180 || lng > 180)) {
+          errors.push(`Row ${i + 2}: invalid longitude "${record.longitude}"`);
+          skipped++;
+          return;
+        }
+      }
+
+      records.push(record);
+    } catch {
+      skipped++;
+      errors.push(`Row ${i + 2}: parsing error`);
+    }
+  });
+
+  let dbImported = 0;
+  if (records.length > 0) {
+    try {
+      if (type === "specialties") {
+        const payload = records.map((r) => ({
+          id: crypto.randomUUID(),
+          name: r.name,
+          slug: r.slug || String(r.name).toLowerCase().replace(/\s+/g, "-"),
+          description: r.description || null,
+        }));
+        const { error: dbErr } = await supabaseAdmin.from("specialties").insert(payload);
+        if (dbErr) errors.push(`DB: ${dbErr.message}`);
+        else dbImported = payload.length;
+      } else if (type === "hospitals") {
+        const payload = records.map((r) => ({
+          id: crypto.randomUUID(),
+          name: r.name,
+          district_id: r.district || null,
+          type: r.type || "private",
+          address: r.address || null,
+          contact_phone: r.contact_phone || null,
+          latitude: r.latitude ? parseFloat(r.latitude) : null,
+          longitude: r.longitude ? parseFloat(r.longitude) : null,
+        }));
+        const { error: dbErr } = await supabaseAdmin.from("hospitals").insert(payload);
+        if (dbErr) errors.push(`DB: ${dbErr.message}`);
+        else dbImported = payload.length;
+      } else if (type === "doctors") {
+        const payload = records.map((r) => ({
+          id: crypto.randomUUID(),
+          name: r.name,
+          qualifications: r.qualifications || null,
+          experience_years: r.experience_years ? parseInt(r.experience_years, 10) : null,
+          consultation_fee: r.consultation_fee ? parseFloat(r.consultation_fee) : null,
+          gender: r.gender || null,
+          chamber_address: r.chamber_address || null,
+        }));
+        const { error: dbErr } = await supabaseAdmin.from("doctors").insert(payload);
+        if (dbErr) errors.push(`DB: ${dbErr.message}`);
+        else dbImported = payload.length;
+      }
+    } catch (dbErr: any) {
+      errors.push(`DB error: ${dbErr.message}`);
+    }
+  }
+
+  imported = dbImported;
+
+  // Record import history
+  try {
+    await importHistoryRepo.create({
+      type: type as any,
+      filename: file.name,
+      status: errors.length > records.length ? "partial" : "completed",
+      rows_imported: imported,
+      rows_skipped: skipped,
+      errors: errors.slice(0, 50),
+      admin_id: auth.admin.id,
+    });
+  } catch {
+    // Non-critical — import still succeeded
+  }
+
+  return success({
+    type,
+    filename: file.name,
+    totalRows: rows.length,
+    imported,
+    skipped,
+    errors: errors.slice(0, 20),
+    headers,
+  });
+});
+
+/** Minimal CSV line parser supporting quoted fields and embedded commas. */
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ",") { result.push(cur); cur = ""; }
+      else cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
