@@ -5,6 +5,7 @@ import { importTypeSchema } from "@/lib/validation";
 import { importHistoryRepo } from "@/lib/repositories/import-history.repo";
 import { withErrorHandler } from "@/lib/middleware/errorHandler";
 import { success, error } from "@/lib/utils/apiResponse";
+import { enforceRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/v1/import
@@ -15,6 +16,9 @@ import { success, error } from "@/lib/utils/apiResponse";
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const auth = await requireAdminPermission(request, "import", "data");
   if (!auth.ok) return auth.response;
+
+  const limited = await enforceRateLimit(request, "import", { limit: 10, windowMs: 60_000 });
+  if (limited) return limited;
 
   const formData = await request.formData();
   const file = formData.get("file") as File;
@@ -143,13 +147,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   // Record import history
   try {
     await importHistoryRepo.create({
-      type: type as any,
+      admin_id: auth.user.id,
+      import_type: type,
       filename: file.name,
-      status: errors.length > records.length ? "partial" : "completed",
-      rows_imported: imported,
-      rows_skipped: skipped,
+      total_rows: rows.length,
+      imported_rows: imported,
+      skipped_rows: skipped,
       errors: errors.slice(0, 50),
-      admin_id: auth.admin.id,
+      status: errors.length > records.length ? "partial" : "completed",
     });
   } catch {
     // Non-critical — import still succeeded

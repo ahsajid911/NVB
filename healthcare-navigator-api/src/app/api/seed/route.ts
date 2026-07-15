@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/auth";
 import bcrypt from "bcryptjs";
+import { enforceRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
-  // Seed creates the first super_admin — gate behind SETUP_TOKEN or existing session.
+  // Rate limit: 5 attempts per minute per IP (prevents SETUP_TOKEN brute-force)
+  const limited = await enforceRateLimit(request, "seed", { limit: 5, windowMs: 60_000 });
+  if (limited) return limited;
+
+  // Seed creates the first super_admin — gate behind SETUP_TOKEN (header only) or existing admin session.
   const setupToken = process.env.SETUP_TOKEN;
   const providedHeader = request.headers.get("x-setup-token");
-  const providedQuery = new URL(request.url).searchParams.get("token");
-  const hasSetupToken = setupToken && (providedHeader === setupToken || providedQuery === setupToken);
+  const hasSetupToken = setupToken && providedHeader === setupToken;
 
   if (!hasSetupToken && !request.cookies.get("admin_token")?.value) {
     return NextResponse.json(
@@ -16,7 +20,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Check if seed data already exists to prevent accidental re-seeding
   const sb = supabaseAdmin;
+  const { data: existingAdmin } = await sb
+    .from("admins")
+    .select("id")
+    .eq("username", "admin")
+    .single();
+
+  if (existingAdmin && !hasSetupToken) {
+    return NextResponse.json(
+      { error: "Admin account already exists. Use x-setup-token header to force re-seed." },
+      { status: 409 }
+    );
+  }
+
   const results: string[] = [];
 
   try {
@@ -130,6 +148,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, results });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message, results }, { status: 500 });
+    console.error("[Seed]", err.message, err.stack);
+    return NextResponse.json({ error: "Seed operation failed", results }, { status: 500 });
   }
 }
