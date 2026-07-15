@@ -33,24 +33,22 @@ export const adminsRepo = {
   async findAll(): Promise<AdminWithProfile[]> {
     const { data: admins, error } = await db()
       .from("admins")
-      .select("id, username, email, role, is_active, created_at, updated_at")
+      .select("id, username, email, role, is_active, created_at, updated_at, admin_profiles(full_name, avatar_url, bio, phone, last_login, login_count)")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
     if (!admins) return [];
 
-    const adminsWithProfiles = await Promise.all(
-      admins.map(async (admin) => {
-        const { data: profile } = await db()
-          .from("admin_profiles")
-          .select("full_name, avatar_url, bio, phone, last_login, login_count")
-          .eq("admin_id", admin.id)
-          .single();
-        return { ...admin, profile: profile || null };
-      })
-    );
-
-    return adminsWithProfiles;
+    return admins.map((admin: any) => ({
+      id: admin.id,
+      username: admin.username,
+      email: admin.email,
+      role: admin.role,
+      is_active: admin.is_active,
+      created_at: admin.created_at,
+      updated_at: admin.updated_at,
+      profile: admin.admin_profiles || null,
+    }));
   },
 
   async findById(id: string): Promise<AdminWithProfile | null> {

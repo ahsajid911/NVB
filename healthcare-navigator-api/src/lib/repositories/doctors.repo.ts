@@ -23,23 +23,21 @@ export const doctorsRepo = {
   async findById(id: string): Promise<DoctorWithRelations | null> {
     const { data, error } = await anonDb()
       .from("doctors")
-      .select(withRelations())
+      .select("*, doctor_specialties(specialty_id, specialties(id, name, name_bn, slug)), doctor_hospitals(hospital_id, hospitals(id, name, name_bn))")
       .eq("id", id)
       .single();
     if (error || !data) return null;
 
     const row = data as any;
 
-    // Enrich with relations
-    const { data: specs } = await anonDb().from("specialties").select("id, name, name_bn, slug");
-    const { data: hosps } = await anonDb().from("hospitals").select("id, name, name_bn");
-    const specMap = new Map((specs || []).map((s: any) => [s.id, s]));
-    const hospMap = new Map((hosps || []).map((h: any) => [h.id, h]));
-
     return {
       ...row,
-      specialties: (row.doctor_specialties || []).map((ds: any) => specMap.get(ds.specialty_id)).filter(Boolean),
-      hospitals: (row.doctor_hospitals || []).map((dh: any) => hospMap.get(dh.hospital_id)).filter(Boolean),
+      specialties: (row.doctor_specialties || [])
+        .map((ds: any) => ds.specialties)
+        .filter(Boolean),
+      hospitals: (row.doctor_hospitals || [])
+        .map((dh: any) => dh.hospitals)
+        .filter(Boolean),
     };
   },
 
