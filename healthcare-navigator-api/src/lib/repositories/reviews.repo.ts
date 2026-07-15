@@ -2,7 +2,7 @@
  * Reviews repository — backed by the `reviews` table.
  * Enforces one review per user per doctor at the DB level (unique constraint).
  */
-import { db } from "@/lib/db/client";
+import { db, anonDb } from "@/lib/db/client";
 
 export interface ReviewRow {
   id: string;
@@ -16,7 +16,7 @@ export interface ReviewRow {
 
 export const reviewsRepo = {
   async findByDoctor(doctorId: string, limit = 20, offset = 0): Promise<ReviewRow[]> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("reviews")
       .select("*")
       .eq("doctor_id", doctorId)
@@ -27,7 +27,7 @@ export const reviewsRepo = {
   },
 
   async findByDoctorCount(doctorId: string): Promise<{ average: number; count: number }> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("reviews")
       .select("rating")
       .eq("doctor_id", doctorId);
@@ -37,7 +37,7 @@ export const reviewsRepo = {
   },
 
   async findByUser(userId: string): Promise<ReviewRow[]> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("reviews")
       .select("*")
       .eq("user_id", userId)
@@ -47,7 +47,7 @@ export const reviewsRepo = {
   },
 
   async findExisting(userId: string, doctorId: string): Promise<ReviewRow | null> {
-    const { data } = await db()
+    const { data } = await anonDb()
       .from("reviews")
       .select("*")
       .eq("user_id", userId)

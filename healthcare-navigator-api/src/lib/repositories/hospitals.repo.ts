@@ -1,9 +1,9 @@
-import { db } from "@/lib/db/client";
+import { db, anonDb } from "@/lib/db/client";
 import type { Hospital, HospitalWithDistrict } from "@/types/database";
 
 export const hospitalsRepo = {
   async findAll(limit = 20, offset = 0): Promise<HospitalWithDistrict[]> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("hospitals")
       .select("*, districts(name, name_bn, division, division_bn)")
       .order("name")
@@ -13,7 +13,7 @@ export const hospitalsRepo = {
   },
 
   async findById(id: string): Promise<HospitalWithDistrict | null> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("hospitals")
       .select("*, districts(name, name_bn, division, division_bn)")
       .eq("id", id)
@@ -23,7 +23,7 @@ export const hospitalsRepo = {
   },
 
   async findByDistrict(districtId: string): Promise<Hospital[]> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("hospitals")
       .select("*")
       .eq("district_id", districtId)

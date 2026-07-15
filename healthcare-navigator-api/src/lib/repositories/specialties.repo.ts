@@ -1,21 +1,21 @@
-import { db } from "@/lib/db/client";
+import { db, anonDb } from "@/lib/db/client";
 import type { Specialty } from "@/types/database";
 
 export const specialtiesRepo = {
   async findAll(): Promise<Specialty[]> {
-    const { data, error } = await db().from("specialties").select("*").order("name");
+    const { data, error } = await anonDb().from("specialties").select("*").order("name");
     if (error) throw error;
     return data || [];
   },
 
   async findBySlug(slug: string): Promise<Specialty | null> {
-    const { data, error } = await db().from("specialties").select("*").eq("slug", slug).single();
+    const { data, error } = await anonDb().from("specialties").select("*").eq("slug", slug).single();
     if (error || !data) return null;
     return data;
   },
 
   async findById(id: string): Promise<Specialty | null> {
-    const { data } = await db().from("specialties").select("*").eq("id", id).single();
+    const { data } = await anonDb().from("specialties").select("*").eq("id", id).single();
     return data || null;
   },
 

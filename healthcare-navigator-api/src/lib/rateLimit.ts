@@ -87,16 +87,18 @@ export interface RateLimitResult {
 }
 
 export function rateLimit(key: string, opts: RateLimitOptions): RateLimitResult {
-  if (upstashAvailable) {
-    return inMemoryRateLimit(key, opts.limit, opts.windowMs);
-  }
   return inMemoryRateLimit(key, opts.limit, opts.windowMs);
 }
 
 /** Extract a best-effort client IP from a Next request. */
 export function getClientIp(request: NextRequest): string {
   const xff = request.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
+  if (xff) {
+    // Vercel appends the real client IP at the end of the chain.
+    // Use the last value to prevent IP spoofing via x-forwarded-for header.
+    const parts = xff.split(",").map((p) => p.trim());
+    return parts[parts.length - 1] || "unknown";
+  }
   return request.headers.get("x-real-ip") || "unknown";
 }
 

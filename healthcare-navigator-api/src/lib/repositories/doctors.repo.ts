@@ -2,7 +2,7 @@
  * Doctor repository — all PostgREST queries for the doctors table.
  * Routes/services call these methods instead of touching supabaseAdmin directly.
  */
-import { db } from "@/lib/db/client";
+import { db, anonDb } from "@/lib/db/client";
 import type { Doctor, DoctorWithRelations, SearchFilters, SearchResult } from "@/types/database";
 
 function withRelations(): string {
@@ -11,7 +11,7 @@ function withRelations(): string {
 
 export const doctorsRepo = {
   async findAll(limit = 20, offset = 0): Promise<Doctor[]> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("doctors")
       .select("*")
       .order("name")
@@ -21,34 +21,36 @@ export const doctorsRepo = {
   },
 
   async findById(id: string): Promise<DoctorWithRelations | null> {
-    const { data, error } = await db()
+    const { data, error } = await anonDb()
       .from("doctors")
       .select(withRelations())
       .eq("id", id)
       .single();
     if (error || !data) return null;
 
+    const row = data as any;
+
     // Enrich with relations
-    const { data: specs } = await db().from("specialties").select("id, name, name_bn, slug");
-    const { data: hosps } = await db().from("hospitals").select("id, name, name_bn");
+    const { data: specs } = await anonDb().from("specialties").select("id, name, name_bn, slug");
+    const { data: hosps } = await anonDb().from("hospitals").select("id, name, name_bn");
     const specMap = new Map((specs || []).map((s: any) => [s.id, s]));
     const hospMap = new Map((hosps || []).map((h: any) => [h.id, h]));
 
     return {
-      ...data,
-      specialties: (data.doctor_specialties || []).map((ds: any) => specMap.get(ds.specialty_id)).filter(Boolean),
-      hospitals: (data.doctor_hospitals || []).map((dh: any) => hospMap.get(dh.hospital_id)).filter(Boolean),
+      ...row,
+      specialties: (row.doctor_specialties || []).map((ds: any) => specMap.get(ds.specialty_id)).filter(Boolean),
+      hospitals: (row.doctor_hospitals || []).map((dh: any) => hospMap.get(dh.hospital_id)).filter(Boolean),
     };
   },
 
   async findBySpecialty(specialtyId: string): Promise<Doctor[]> {
-    const { data } = await db()
+    const { data } = await anonDb()
       .from("doctor_specialties")
       .select("doctor_id")
       .eq("specialty_id", specialtyId);
     const ids = (data || []).map((d: any) => d.doctor_id);
     if (ids.length === 0) return [];
-    const { data: doctors } = await db()
+    const { data: doctors } = await anonDb()
       .from("doctors")
       .select("*")
       .in("id", ids)
@@ -57,13 +59,13 @@ export const doctorsRepo = {
   },
 
   async findByHospital(hospitalId: string): Promise<Doctor[]> {
-    const { data } = await db()
+    const { data } = await anonDb()
       .from("doctor_hospitals")
       .select("doctor_id")
       .eq("hospital_id", hospitalId);
     const ids = (data || []).map((d: any) => d.doctor_id);
     if (ids.length === 0) return [];
-    const { data: doctors } = await db()
+    const { data: doctors } = await anonDb()
       .from("doctors")
       .select("*")
       .in("id", ids)

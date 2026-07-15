@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SpecialtyLoading() {
   return (
-    <div className="mx-auto max-w-[1440px] px-6 py-12 lg:px-10">
+    <div className="mx-auto max-w-[1280px] px-6 py-12 lg:px-12">
       <Skeleton className="h-6 w-32 mb-6" />
       <div className="mb-8">
         <Skeleton className="h-10 w-64 mb-3" />

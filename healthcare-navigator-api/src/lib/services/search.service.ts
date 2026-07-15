@@ -2,7 +2,8 @@
  * Search service — executes rich filtering against the LIVE DATABASE
  * (not in-memory arrays). Bilingual matching via PostgREST or/ilike.
  */
-import { db } from "@/lib/db/client";
+import { anonDb } from "@/lib/db/client";
+import { sanitizeFilterValue } from "@/lib/validation";
 import type { SearchFilters, DoctorWithRelations } from "@/types/database";
 
 export interface SearchResponse {
@@ -15,15 +16,16 @@ export interface SearchResponse {
 
 export const searchService = {
   async searchDoctors(filters: SearchFilters): Promise<SearchResponse> {
-    let query = db().from("doctors").select(
+    let query = anonDb().from("doctors").select(
       "*, doctor_specialties(specialty_id), doctor_hospitals(hospital_id)",
       { count: "exact" }
     );
 
     // Text search — bilingual (name + name_bn)
     if (filters.query) {
+      const safeQuery = sanitizeFilterValue(filters.query);
       query = query.or(
-        `name.ilike.%${filters.query}%,name_bn.ilike.%${filters.query}%,qualifications.ilike.%${filters.query}%`
+        `name.ilike.%${safeQuery}%,name_bn.ilike.%${safeQuery}%,qualifications.ilike.%${safeQuery}%`
       );
     }
 
@@ -58,9 +60,9 @@ export const searchService = {
 
     // Fetch related data once (not per doctor)
     const [specsResult, hospsResult, distsResult] = await Promise.all([
-      db().from("specialties").select("id, name, name_bn, slug"),
-      db().from("hospitals").select("id, name, name_bn, district_id"),
-      db().from("districts").select("id, name, name_bn, division, division_bn"),
+      anonDb().from("specialties").select("id, name, name_bn, slug"),
+      anonDb().from("hospitals").select("id, name, name_bn, district_id"),
+      anonDb().from("districts").select("id, name, name_bn, division, division_bn"),
     ]);
 
     const specMap = new Map((specsResult.data || []).map((s: any) => [s.id, s]));

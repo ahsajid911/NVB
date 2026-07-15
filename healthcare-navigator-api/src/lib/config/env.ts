@@ -22,10 +22,12 @@ function loadEnv(): Env {
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
-    // Don't throw during build — some routes are statically analyzed. Throw at runtime instead.
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(`[env] Missing/invalid environment variables: ${issues}`);
+    // Don't throw during build — some routes are statically analyzed.
+    if (process.env.NODE_ENV === "production") {
+      // In production, missing env vars cause silent failures. Throw to fail fast.
+      throw new Error(`[env] Missing/invalid environment variables: ${issues}`);
     }
+    console.warn(`[env] Missing/invalid environment variables: ${issues}`);
     return process.env as unknown as Env;
   }
   return parsed.data;

@@ -1,23 +1,13 @@
 import { ProviderConfig, ApiKeyEntry, DEFAULT_PROVIDERS } from "./types";
 import { decrypt } from "@/lib/crypto";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-
-let _sb: SupabaseClient | null = null;
-function getSupabase() {
-  if (_sb) return _sb;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  _sb = createClient(url, key);
-  return _sb;
-}
+import { getDb } from "@/lib/db/client";
 
 let _providers: ProviderConfig[] | null = null;
 let _apiKeys: ApiKeyEntry[] | null = null;
 
 async function ensureProviders(): Promise<ProviderConfig[]> {
   if (_providers) return _providers;
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) { _providers = [...DEFAULT_PROVIDERS]; return _providers; }
   try {
     const { data, error } = await sb.from("ai_providers").select("*").order("priority");
@@ -43,7 +33,7 @@ async function ensureProviders(): Promise<ProviderConfig[]> {
 
 async function ensureApiKeys(): Promise<ApiKeyEntry[]> {
   if (_apiKeys) return _apiKeys;
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) { _apiKeys = []; return _apiKeys; }
   try {
     const { data, error } = await sb.from("ai_api_keys").select("*").order("priority");
@@ -70,7 +60,7 @@ export async function getApiKeys(): Promise<ApiKeyEntry[]> { return ensureApiKey
 export function clearCache() { _providers = null; _apiKeys = null; }
 
 export async function setProviders(providers: ProviderConfig[]): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) throw new Error("Database unavailable");
   for (const p of providers) {
     await sb.from("ai_providers").upsert({
@@ -83,7 +73,7 @@ export async function setProviders(providers: ProviderConfig[]): Promise<void> {
 }
 
 export async function addApiKey(key: ApiKeyEntry): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) throw new Error("Database unavailable");
   const { error } = await sb.from("ai_api_keys").insert({
     id: key.id, provider_id: key.providerId, encrypted_key: key.encryptedKey,
@@ -97,7 +87,7 @@ export async function addApiKey(key: ApiKeyEntry): Promise<void> {
 }
 
 export async function removeApiKey(id: string): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) throw new Error("Database unavailable");
   const { error } = await sb.from("ai_api_keys").delete().eq("id", id);
   if (error) throw new Error(error.message);
@@ -105,7 +95,7 @@ export async function removeApiKey(id: string): Promise<void> {
 }
 
 export async function updateApiKey(id: string, updates: Partial<ApiKeyEntry>): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   if (!sb) throw new Error("Database unavailable");
   const dbUpdates: any = {};
   if (updates.active !== undefined) dbUpdates.active = updates.active;

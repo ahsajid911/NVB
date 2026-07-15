@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HospitalLoading() {
   return (
-    <div className="mx-auto max-w-[1440px] px-6 py-12 lg:px-10">
+    <div className="mx-auto max-w-[1280px] px-6 py-12 lg:px-12">
       <Skeleton className="h-6 w-32 mb-8" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
