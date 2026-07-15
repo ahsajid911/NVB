@@ -40,6 +40,9 @@ const ROLE_PERMISSIONS: Record<AdminRole, string[]> = {
   data_manager: ["read", "update", "import", "export"],
 };
 
+/** Resources that only super_admin can modify (user/role management). */
+const SUPER_ADMIN_RESOURCES = new Set(["admins", "audit_logs"]);
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
@@ -121,6 +124,39 @@ export async function destroySession(token: string): Promise<void> {
   await sb.from("admin_sessions").delete().eq("token", token);
 }
 
+/**
+ * Clean up expired sessions from both admin_sessions and user_sessions tables.
+ * Call periodically (e.g., on health check or via a cron job) to prevent unbounded growth.
+ * Returns the number of deleted sessions.
+ */
+export async function cleanupExpiredSessions(): Promise<number> {
+  const sb = getDb();
+  if (!sb) return 0;
+
+  const now = new Date().toISOString();
+  let totalDeleted = 0;
+
+  // Clean admin sessions
+  const { count: adminDeleted } = await sb
+    .from("admin_sessions")
+    .delete({ count: "exact" })
+    .lt("expires_at", now);
+  totalDeleted += adminDeleted || 0;
+
+  // Clean user sessions (if table exists)
+  try {
+    const { count: userDeleted } = await sb
+      .from("user_sessions")
+      .delete({ count: "exact" })
+      .lt("expires_at", now);
+    totalDeleted += userDeleted || 0;
+  } catch {
+    // user_sessions table may not exist — ignore
+  }
+
+  return totalDeleted;
+}
+
 export async function logActivity(
   adminId: string,
   action: string,
@@ -145,6 +181,10 @@ export async function logActivity(
 
 export function hasPermission(role: AdminRole, permission: string, resource: string): boolean {
   if (role === "super_admin") return true;
+
+  // Certain resources are restricted to super_admin only
+  if (SUPER_ADMIN_RESOURCES.has(resource)) return false;
+
   const perms = ROLE_PERMISSIONS[role] || [];
   return perms.includes(permission);
 }

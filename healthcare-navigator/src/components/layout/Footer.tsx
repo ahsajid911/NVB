@@ -23,11 +23,11 @@ export default function Footer() {
             </p>
             <div className="mt-4 flex items-center gap-3">
               <a
-                href="https://facebook.com"
+                href="https://github.com/ahsajid911/NVB"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition-colors hover:bg-[#0066FF] hover:text-white"
-                aria-label="Visit our website"
+                aria-label="View source on GitHub"
               >
                 <Globe className="h-4 w-4" />
               </a>
